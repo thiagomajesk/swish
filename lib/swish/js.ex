@@ -6,6 +6,8 @@ defmodule Swish.JS do
   the user is encouraged to customize it by creating its implementations if necessary.
   """
 
+  alias Phoenix.LiveView.JS
+
   @callback show_dialog(JS.t(), Swish.Dialog.t()) :: JS.t()
   @callback hide_dialog(JS.t(), Swish.Dialog.t()) :: JS.t()
 
