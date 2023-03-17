@@ -42,7 +42,3 @@ Add the Swish hooks to your application's `app.js`
 import SwishHooks from "swish";
 let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}, hooks: { ...SwishHooks }})
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/swish>.
