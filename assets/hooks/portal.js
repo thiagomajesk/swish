@@ -26,23 +26,36 @@ function forwardEvents(template, portal) {
   }
 }
 
+const updates = {
+  "prepend": (target, clone) => {
+    target.parentNode.insertBefore(clone, target)
+  },
+  "append": (target, clone) => {
+    target.parentNode.insertBefore(clone, target.nextSibling)
+  },
+  "origin": (target, clone) => {
+    target.appendChild(clone)
+  }
+}
+
 export default {
-  portal: null,
+  clone: null,
   target: null,
   update: null,
   eventsTimeout: null,
   destroyTimeout: null,
 
   mounted() {
-    this.target = getAttributeOrThrow(this.el, "data-target");
+    const targetSelector = getAttributeOrThrow(this.el, "data-target");
+    this.target = document.querySelector(targetSelector);
     this.update = getAttributeOrThrow(this.el, "data-update");
 
-    this.el.addEventListener("portal:open", this.handleOpen());
-    this.el.addEventListener("portal:close", this.handleClose());
+    this.el.addEventListener("portal:open", this.handleOpen.bind(this));
+    this.el.addEventListener("portal:close", this.handleClose.bind(this));
   },
 
   destroyed() {
-    this.destroyPortal();
+    this.clone.remove();
 
     // Removes the timeouts just to be sure 
     clearTimeout(this.eventsTimeout);
@@ -51,28 +64,21 @@ export default {
 
   handleOpen() {
     let clone = this.el.content.cloneNode(true);
-    this.portal = clone.firstElementChild;
+    this.clone = clone.firstElementChild;
 
-    if (this.update == "prepend") {
-      this.target.parentNode.insertBefore(this.clone, this.target)
-    } else if (this.update == "append") {
-      this.target.parentNode.insertBefore(this.clone, this.target.nextSibling)
-    } else {
-      this.target.appendChild(this.clone)
-    }
+    // Teleports clone to target
+    updates[update](target, clone)
 
     // Await until next tick to register the forwarded events
-    this.eventsTimeout = setTimeout(() => forwardEvents(this.el, this.portal), 0)
+    this.eventsTimeout = setTimeout(() => forwardEvents(this.el, this.clone), 0)
   },
 
   handleClose() {
+    // Cache old clone to avoid race conditions
+    let clone = this.clone
+
     // Await a little before removing the element so animations can be properly displayed. 
     // Ideally this shoud be configurable in the future so the user has more control over it.
-    this.destroyTimeout = setTimeout(() => { this.destroyPortal() }, 1000);
-  },
-
-  destroyPortal() {
-    if (this.portal == null) return;
-    this.portal.remove();
+    this.destroyTimeout = setTimeout(() => clone.remove(), 1000);
   }
 }
