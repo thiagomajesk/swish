@@ -1,4 +1,33 @@
 defmodule Swish.Dialog do
+  @moduledoc """
+  A dialog is a window overlaid on either the primary window or another dialog window.
+  Windows under a modal dialog are inert. That is, users cannot interact with content outside an active dialog window.
+  Inert content outside an active dialog is typically visually obscured or dimmed so it is difficult to discern,
+  and in some implementations, attempts to interact with the inert content cause the dialog to close.
+
+  ## ARIA design pattern
+  https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/
+
+  ## Markup example
+
+  ```heex
+  <Swish.Dialog.root :let={dialog}>
+  <Swish.Dialog.trigger dialog={dialog} :let={attrs}>
+    <button {attrs}>Open Dialog</button>
+  </Swish.Dialog.trigger>
+  <Swish.Dialog.portal dialog={dialog}>
+    <Swish.Dialog.overlay dialog={dialog}>
+  	  <Swish.Dialog.content dialog={dialog}>
+  		  <Swish.Dialog.title dialog={dialog}>Welcome to Swish!</Swish.Dialog.title>
+  			<Swish.Dialog.description dialog={dialog}>Swish is a UI toolkit for busy developers</Swish.Dialog.description>
+        <p>Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.</p>
+  		</Swish.Dialog.content>
+    </Swish.Dialog.overlay>
+  </Swish.Dialog.portal>
+  </Swish.Dialog.root>
+  ```
+  """
+
   @type t :: %Swish.Dialog{}
 
   @enforce_keys [:id, :portal_id]
@@ -7,12 +36,12 @@ defmodule Swish.Dialog do
   use Phoenix.Component
   alias Phoenix.LiveView.JS
 
-  attr :id, :string, required: false
-  attr :show, :boolean, default: false
-  attr :dialog, __MODULE__, required: false
+  attr(:id, :string, required: false)
+  attr(:show, :boolean, default: false)
+  attr(:dialog, __MODULE__, required: false)
 
-  attr :rest, :global
-  slot :inner_block, required: true
+  attr(:rest, :global)
+  slot(:inner_block, required: true)
 
   def root(assigns) do
     assigns =
@@ -24,7 +53,7 @@ defmodule Swish.Dialog do
       assign_new(assigns, :dialog, fn %{id: id} ->
         %__MODULE__{
           id: id,
-          portal_id: "portal-#{System.unique_integer()}", 
+          portal_id: "portal-#{System.unique_integer()}"
         }
       end)
 
@@ -35,10 +64,10 @@ defmodule Swish.Dialog do
     """
   end
 
-  attr :show, :boolean, default: false
-  attr :dialog, __MODULE__, required: true
-  attr :rest, :global
-  slot :inner_block, required: true
+  attr(:show, :boolean, default: false)
+  attr(:dialog, __MODULE__, required: true)
+  attr(:rest, :global)
+  slot(:inner_block, required: true)
 
   def container(assigns) do
     assigns = assign(assigns, id: "#{assigns.dialog.id}-container")
@@ -50,8 +79,8 @@ defmodule Swish.Dialog do
     """
   end
 
-  attr :dialog, __MODULE__, required: true
-  slot :inner_block, required: true
+  attr(:dialog, __MODULE__, required: true)
+  slot(:inner_block, required: true)
 
   def trigger(assigns) do
     assigns =
@@ -65,9 +94,9 @@ defmodule Swish.Dialog do
     """
   end
 
-  attr :dialog, __MODULE__, required: true
-  slot :inner_block, required: true
-  attr :rest, :global
+  attr(:dialog, __MODULE__, required: true)
+  slot(:inner_block, required: true)
+  attr(:rest, :global)
 
   def overlay(assigns) do
     assigns = assign(assigns, id: "#{assigns.dialog.id}-overlay")
@@ -79,8 +108,8 @@ defmodule Swish.Dialog do
     """
   end
 
-  attr :dialog, __MODULE__, required: true
-  slot :inner_block, required: true
+  attr(:dialog, __MODULE__, required: true)
+  slot(:inner_block, required: true)
 
   def close(assigns) do
     assigns =
@@ -94,10 +123,10 @@ defmodule Swish.Dialog do
     """
   end
 
-  attr :dialog, __MODULE__, required: true
-  attr :on_close, JS, default: %JS{}
-  attr :rest, :global
-  slot :inner_block, required: true
+  attr(:dialog, __MODULE__, required: true)
+  attr(:on_close, JS, default: %JS{})
+  attr(:rest, :global)
+  slot(:inner_block, required: true)
 
   def content(assigns) do
     assigns = assign(assigns, id: "#{assigns.dialog.id}-content")
@@ -118,10 +147,10 @@ defmodule Swish.Dialog do
     """
   end
 
-  attr :as, :string, default: "h2"
-  attr :dialog, __MODULE__, required: true
-  attr :rest, :global
-  slot :inner_block, required: true
+  attr(:as, :string, default: "h2")
+  attr(:dialog, __MODULE__, required: true)
+  attr(:rest, :global)
+  slot(:inner_block, required: true)
 
   def title(assigns) do
     assigns = assign(assigns, id: "#{assigns.dialog.id}-title")
@@ -133,10 +162,10 @@ defmodule Swish.Dialog do
     """
   end
 
-  attr :as, :string, default: "p"
-  attr :dialog, __MODULE__, required: true
-  attr :rest, :global
-  slot :inner_block, required: true
+  attr(:as, :string, default: "p")
+  attr(:dialog, __MODULE__, required: true)
+  attr(:rest, :global)
+  slot(:inner_block, required: true)
 
   def description(assigns) do
     assigns = assign(assigns, id: "#{assigns.dialog.id}-description")
@@ -148,10 +177,10 @@ defmodule Swish.Dialog do
     """
   end
 
-  attr :dialog, __MODULE__, required: true
-  attr :target, :string, default: "body"
-  attr :update, :string, values: ~w(prepend append origin), default: "origin"
-  slot :inner_block, required: true
+  attr(:dialog, __MODULE__, required: true)
+  attr(:target, :string, default: "body")
+  attr(:update, :string, values: ~w(prepend append origin), default: "origin")
+  slot(:inner_block, required: true)
 
   def portal(assigns) do
     ~H"""
