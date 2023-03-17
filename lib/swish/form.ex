@@ -9,16 +9,12 @@ defmodule Swish.Form do
   #### Simple form control
 
   ```heex
-  <Swish.Form.root for={@changeset}>
-    <Swish.Form.group field={f[:email]} type="text" label="Email">
-      <Swish.Form.message :let={errors} for={msg <- errors}>
-        <p><%= msg %></p>
-      </Swish.Form.message>
-    </Swish.Form.group>
-
-    <Swish.Form.group field={f[:password]} type="password" label="Password">
-      <Swish.Form.message :let={errors} for={msg <- errors}>
-        <p><%= msg %></p>
+  <Swish.Form.root for={@changeset} :let={f}>
+    <Swish.Form.group field={f[:email]}>
+      <Swish.Form.control field={f[:email]} as="text" />
+      <Swish.Form.label field={f[:email]} />
+      <Swish.Form.message field={f[:email]} :let={errors}>
+        <span :for={error <- errors}><%= error %></span>
       </Swish.Form.message>
     </Swish.Form.group>
   </Swish.Form.root>
@@ -38,6 +34,34 @@ defmodule Swish.Form do
   end
 
   @doc """
+  Renders a form group component.
+
+  ## Examples
+
+  #### Simple form group
+
+  ```heex
+  <Swish.Form.group field={f[:name]}>
+    <Swish.Form.control field={f[:name]} as="text" />
+  </Swish.Form.group>
+  ```
+  """
+  attr(:field, Phoenix.HTML.FormField, required: true)
+  attr(:name, :string, required: false)
+  slot(:inner_block, required: true)
+  attr(:rest, :global)
+
+  def group(assigns) do
+    assigns = assign_new(assigns, :name, & &1.field.name)
+
+    ~H"""
+    <div phx-feedback-for={@name} {@rest}>
+      <%= render_slot(@inner_block) %>
+    </div>
+    """
+  end
+
+  @doc """
   Renders a form control component.
 
   ## Examples
@@ -45,18 +69,18 @@ defmodule Swish.Form do
   #### Simple form control
 
   ```heex
-  <Swish.Form.control field={f[:name]} type="text" />
-  <Swish.Form.control field={f[:name]} type="password" />
-  <Swish.Form.control field={f[:name]} type="textarea" />
-  <Swish.Form.control field={f[:name]} type="select" />
+  <Swish.Form.control field={f[:name]} as="text" />
+  <Swish.Form.control field={f[:name]} as="password" />
+  <Swish.Form.control field={f[:name]} as="textarea" />
+  <Swish.Form.control field={f[:name]} as="select" />
   ```
   """
 
-  attr(:field, Phoenix.HTML.FormField)
-  attr(:type, :string, default: "text")
+  attr(:field, Phoenix.HTML.FormField, required: true)
+  attr(:as, :string, default: "text")
   attr(:rest, :global)
 
-  def control(%{field: %Phoenix.HTML.FormField{}} = assigns) do
+  def control(assigns) do
     assigns
     |> assign_new(:id, & &1.field.id)
     |> assign_new(:name, & &1.field.name)
@@ -72,17 +96,24 @@ defmodule Swish.Form do
   #### Simple label
 
   ```heex
+  <Swish.Form.label field={f[:name]} />
+  ```
+
+  #### Custom content
+
+  ```heex
   <Swish.Form.label field={f[:name]}>
     Name
   </Swish.Form.label>
   ```
   """
 
-  attr(:label, :string)
-  attr(:field, Phoenix.HTML.FormField)
+  attr(:field, Phoenix.HTML.FormField, required: true)
+  attr(:label, :string, required: false)
+  slot(:inner_block, required: false)
   attr(:rest, :global)
 
-  def label(%{field: %Phoenix.HTML.FormField{}} = assigns) do
+  def label(assigns) do
     assigns =
       assigns
       |> assign_new(:for, & &1.field.id)
@@ -90,7 +121,7 @@ defmodule Swish.Form do
 
     ~H"""
     <Swish.Tag.label for={@for} {@rest}>
-      <%= @label %>
+      <%= (@innner_block != [] && render_slot(@inner_block)) || @label %>
     </Swish.Tag.label>
     """
   end
@@ -103,88 +134,42 @@ defmodule Swish.Form do
   #### Simple message
 
   ```heex
-  <Swish.Form.message field={f[:name]}>
-    Name is a required field.
+  <Swish.Form.message :let={errors} field={f[:name]}>
+    ...
   </Swish.Form.message>
   ```
 
   #### Custom tag
 
   ```heex
-  <Swish.Form.message field={f[:name]} tag="small">
-    Name is a required field.
+  <Swish.Form.message :let={errors} field={f[:name]} as="small">
+    ...
   </Swish.Form.message>
   ```
   """
 
-  attr(:tag, :any, default: "p")
-  attr(:field, Phoenix.HTML.FormField)
+  attr(:field, Phoenix.HTML.FormField, required: true)
+  attr(:as, :string, default: "p")
+  slot(:inner_block, required: true)
   attr(:rest, :global)
 
-  def message(%{field: %Phoenix.HTML.FormField{}} = assigns) do
-    assigns = assign_new(assigns, :errors, & &1.field.errors)
+  def message(assigns) do
+    assigns = assign_new(assigns, :errors, &Enum.map(&1, translate_error(&1)))
 
     ~H"""
-    <.dynamic_tag name={@tag} {@rest}>
+    <.dynamic_tag name={@as} {@rest}>
       <%= render_slot(@inner_block, @errors) %>
     </.dynamic_tag>
     """
   end
 
-  attr(:id, :any, default: nil)
-  attr(:name, :any, default: nil)
-  attr(:label, :any, default: true)
-  attr(:value, :any, default: nil)
-  attr(:field, Phoenix.HTML.FormField)
-  attr(:rest, :global)
-
-  @doc """
-  Renders a form group component.
-
-  ## Examples
-
-  #### Simple form group
-
-  ```heex
-  <Swish.Form.group>
-    <Swish.Form.control type="text" field={f[:name]} />
-  </Swish.Form.group>
-  ```
-
-  #### Custom label
-
-  ```heex
-  <Swish.Form.group label="Enter your first name">
-    <Swish.Form.control type="text" field={f[:name]} />
-  </Swish.Form.group>
-  ```
-
-   #### Hidden label
-
-  ```heex
-  <Swish.Form.group label={false}>
-    <Swish.Form.control type="text" field={f[:name]} />
-  </Swish.Form.group>
-
-  """
-
-  def group(%{field: %Phoenix.HTML.FormField{}} = assigns) do
-    assigns
-    |> assign_new(:id, & &1.field.id)
-    |> assign_new(:name, & &1.field.name)
-    |> assign_new(:label, &Phoenix.Naming.humanize(&1.field.name))
-    |> assign_new(:value, & &1.field.value)
-    |> assign_new(:errors, & &1.field.errors)
-    |> render_group()
-  end
-
-  defp render_control(%{type: "textarea"} = assigns) do
+  defp render_control(%{as: "textarea"} = assigns) do
     ~H"""
     <Swish.Tag.textarea id={@id} name={@name} value={@value} {@rest} />
     """
   end
 
-  defp render_control(%{type: "select"} = assigns) do
+  defp render_control(%{as: "select"} = assigns) do
     ~H"""
     <Swish.Tag.select id={@id} name={@name} value={@value} {@rest} />
     """
@@ -192,24 +177,17 @@ defmodule Swish.Form do
 
   defp render_control(assigns) do
     ~H"""
-    <Swish.Tag.input type={@type} id={@id} name={@name} value={@value} {@rest} />
+    <Swish.Tag.input type={@as} id={@id} name={@name} value={@value} {@rest} />
     """
   end
 
-  defp render_group(%{label: false} = assigns) do
-    ~H"""
-    <div phx-feedback-for={@name} {@rest}>
-      <%= render_slot(@inner_block) %>
-    </div>
-    """
-  end
+  def translate_error({msg, opts}) do
+    module = Application.get_env(:swish, :gettext)
 
-  defp render_group(%{label: label} = assigns) when is_binary(label) do
-    ~H"""
-    <div phx-feedback-for={@name} {@rest}>
-      <Swish.Form.label field={@field} />
-      <%= render_slot(@inner_block) %>
-    </div>
-    """
+    case {module, opts[:count]} do
+      {nil, _} -> msg
+      {module, nil} -> Gettext.dgettext(module, "errors", msg, opts)
+      {module, count} -> Gettext.dngettext(module, "errors", msg, msg, count, opts)
+    end
   end
 end
