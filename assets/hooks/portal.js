@@ -67,7 +67,7 @@ export default {
     this.clone = clone.firstElementChild;
 
     // Teleports clone to target
-    updates[update](target, clone)
+    updates[this.update](this.target, this.clone)
 
     // Await until next tick to register the forwarded events
     this.eventsTimeout = setTimeout(() => forwardEvents(this.el, this.clone), 0)

@@ -1,0 +1,17 @@
+{
+  "name": "swish",
+  "version": "0.0.0",
+  "description": "Swish",
+  "license": "MIT",
+  "main": "./assets/hooks/index.js",
+  "exports": {
+    "import": "./assets/hooks/index.js",
+    "require": "./assets/hooks/index.js"
+  },
+  "files": [
+    "README.md",
+    "LICENSE.md",
+    "package.json",
+    "assets/*"
+  ]
+}

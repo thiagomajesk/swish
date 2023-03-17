@@ -85,7 +85,7 @@ defmodule Swish.Tag do
     ~H"""
     <template
       id={@id}
-      phx-hook="Portal"
+      phx-hook="Swish.Portal"
       data-target={@target}
       data-update={@update}
     >

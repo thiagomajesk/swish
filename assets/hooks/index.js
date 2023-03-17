@@ -1,5 +1,5 @@
-import SwishPortal from "./portal";
+import Portal from "./portal";
 
 export default {
-  SwishPortal
+  "Swish.Portal": Portal
 }

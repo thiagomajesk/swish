@@ -23,7 +23,7 @@ defmodule Swish.JS do
       @impl true
       def show_dialog(js \\ %JS{}, %Swish.Dialog{} = dialog) do
         js
-        |> JS.dispatch("portal:open", to: "##{dialog.teleport_id}")
+        |> JS.dispatch("portal:open", to: "##{dialog.portal_id}")
         |> JS.show(to: "##{dialog.id}-overlay")
         |> JS.show(to: "##{dialog.id}-container")
         |> JS.focus_first(to: "##{dialog.id}-content")
@@ -35,7 +35,7 @@ defmodule Swish.JS do
         |> JS.pop_focus()
         |> JS.hide(to: "##{dialog.id}-overlay")
         |> JS.hide(to: "##{dialog.id}-container")
-        |> JS.dispatch("portal:close", to: "##{dialog.teleport_id}")
+        |> JS.dispatch("portal:close", to: "##{dialog.portal_id}")
       end
 
       defoverridable Swish.JS
