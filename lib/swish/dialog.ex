@@ -91,7 +91,8 @@ defmodule Swish.Dialog do
     assigns =
       assign(assigns, :attrs, %{
         "phx-click" => show(assigns.dialog),
-        "id" => "#{assigns.dialog.id}-trigger"
+        "id" => "#{assigns.dialog.id}-trigger",
+        "data-state" => "closed"
       })
 
     ~H"""
@@ -107,7 +108,7 @@ defmodule Swish.Dialog do
     assigns = assign(assigns, id: "#{assigns.dialog.id}-overlay")
 
     ~H"""
-    <div id={@id} {@rest} aria-hidden="true">
+    <div id={@id} {@rest} data-state="closed" aria-hidden="true">
       <%= render_slot(@inner_block) %>
     </div>
     """
@@ -141,6 +142,7 @@ defmodule Swish.Dialog do
       phx-key="escape"
       phx-window-keydown={hide(@dialog)}
       phx-click-away={hide(@dialog)}
+      data-state="closed" 
       role="dialog"
       aria-modal="true"
       tabindex="0"
