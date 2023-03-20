@@ -63,8 +63,8 @@ defmodule Swish.Dialog do
   slot(:inner_block, required: true)
 
   def root(assigns) do
-    assigns = assign_new(assigns, :dialog, fn -> 
-      %{ Dialog.new() | open: assigns.open, static: assigns.static } 
+    assigns = assign_new(assigns, :dialog, fn ->
+      %{ Dialog.new() | open: assigns.open, static: assigns.static }
     end)
 
     ~H"""
@@ -98,10 +98,10 @@ defmodule Swish.Dialog do
     assigns = assign(assigns, id: "#{assigns.dialog.id}-backdrop")
 
     ~H"""
-    <div 
-      id={@id} 
-      data-state={open_to_state(@dialog)} 
-      aria-hidden={if @dialog.open, do: "false", else: "true"} 
+    <div
+      id={@id}
+      data-state={open_to_state(@dialog)}
+      aria-hidden={if @dialog.open, do: "false", else: "true"}
       {@rest}
     >
       <%= render_slot(@inner_block) %>
@@ -142,7 +142,7 @@ defmodule Swish.Dialog do
       data-state={open_to_state(@dialog)}
       role="dialog"
       aria-modal="true"
-      tabindex="0"
+      tabindex="-1"
       {@rest}
     >
       <%= render_slot(@inner_block) %>
@@ -189,8 +189,8 @@ defmodule Swish.Dialog do
 
   def portal(assigns) do
     ~H"""
-    <Swish.Tag.portal 
-      id={@dialog.portal_id} 
+    <Swish.Tag.portal
+      id={@dialog.portal_id}
       target={@target}
       update={@update}
       destroy_delay={@destroy_delay}
@@ -204,8 +204,8 @@ defmodule Swish.Dialog do
   defp show(%Dialog{js_show: fun} = dialog, js \\ %JS{}), do: fun.(js, dialog)
   defp hide(%Dialog{js_hide: fun} = dialog, js \\ %JS{}), do: fun.(js, dialog)
 
-  defp open_to_state(%Dialog{open: open}) do 
-    case open do 
+  defp open_to_state(%Dialog{open: open}) do
+    case open do
       true -> "open"
       false -> "closed"
       _ -> raise "Expected boolean but received: #{inspect(open)}"
