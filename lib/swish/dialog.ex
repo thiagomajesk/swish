@@ -16,13 +16,13 @@ defmodule Swish.Dialog do
     <button {attrs}>Open Dialog</button>
   </Swish.Dialog.trigger>
   <Swish.Dialog.portal dialog={dialog}>
-    <Swish.Dialog.overlay dialog={dialog}>
+    <Swish.Dialog.backdrop dialog={dialog}>
   	  <Swish.Dialog.content dialog={dialog}>
   		  <Swish.Dialog.title dialog={dialog}>Welcome to Swish!</Swish.Dialog.title>
   			<Swish.Dialog.description dialog={dialog}>Swish is a UI toolkit for busy developers</Swish.Dialog.description>
         <p>Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.</p>
   		</Swish.Dialog.content>
-    </Swish.Dialog.overlay>
+    </Swish.Dialog.backdrop>
   </Swish.Dialog.portal>
   </Swish.Dialog.root>
   ```
@@ -30,8 +30,8 @@ defmodule Swish.Dialog do
 
   @type t :: %Swish.Dialog{}
 
-  @enforce_keys [:id, :portal_id]
-  defstruct [:id, :portal_id, :js_show, :js_hide]
+  @enforce_keys [:id, :portal_id, :open]
+  defstruct [:id, :portal_id, :js_show, :js_hide, :open]
 
   use Phoenix.Component
 
@@ -48,38 +48,26 @@ defmodule Swish.Dialog do
       id: "dialog-#{dialog_id}",
       portal_id: "portal-#{portal_id}",
       js_show: Function.capture(js_module, :show_dialog, 2),
-      js_hide: Function.capture(js_module, :hide_dialog, 2)
+      js_hide: Function.capture(js_module, :hide_dialog, 2),
+      open: false
     }
   end
 
   attr(:id, :string, required: false)
-  attr(:show, :boolean, default: false)
+  attr(:open, :boolean, default: false)
   attr(:dialog, Dialog, required: false)
 
   attr(:rest, :global)
   slot(:inner_block, required: true)
 
   def root(assigns) do
-    assigns = assign_new(assigns, :dialog, fn -> Dialog.new() end)
+    assigns = assign_new(assigns, :dialog, fn -> 
+      %{ Dialog.new() | open: assigns.open} 
+    end)
 
     ~H"""
     <div id={@dialog.id} {@rest}>
       <%= render_slot(@inner_block, @dialog) %>
-    </div>
-    """
-  end
-
-  attr(:show, :boolean, default: false)
-  attr(:dialog, Dialog, required: true)
-  attr(:rest, :global)
-  slot(:inner_block, required: true)
-
-  def container(assigns) do
-    assigns = assign(assigns, id: "#{assigns.dialog.id}-container")
-
-    ~H"""
-    <div id={@id} phx-mounted={@show && show(@dialog)} phx-remove={hide(@dialog)}>
-      <%= render_slot(@inner_block) %>
     </div>
     """
   end
@@ -92,7 +80,7 @@ defmodule Swish.Dialog do
       assign(assigns, :attrs, %{
         "phx-click" => show(assigns.dialog),
         "id" => "#{assigns.dialog.id}-trigger",
-        "data-state" => "closed"
+        "data-state" => open_to_state(assigns.dialog)
       })
 
     ~H"""
@@ -104,11 +92,11 @@ defmodule Swish.Dialog do
   slot(:inner_block, required: true)
   attr(:rest, :global)
 
-  def overlay(assigns) do
-    assigns = assign(assigns, id: "#{assigns.dialog.id}-overlay")
+  def backdrop(assigns) do
+    assigns = assign(assigns, id: "#{assigns.dialog.id}-backdrop")
 
     ~H"""
-    <div id={@id} {@rest} data-state="closed" aria-hidden="true">
+    <div id={@id} data-state={open_to_state(@dialog)} aria-hidden="true" {@rest}>
       <%= render_slot(@inner_block) %>
     </div>
     """
@@ -142,7 +130,7 @@ defmodule Swish.Dialog do
       phx-key="escape"
       phx-window-keydown={hide(@dialog)}
       phx-click-away={hide(@dialog)}
-      data-state="closed" 
+      data-state={open_to_state(@dialog)}
       role="dialog"
       aria-modal="true"
       tabindex="0"
@@ -190,7 +178,12 @@ defmodule Swish.Dialog do
 
   def portal(assigns) do
     ~H"""
-    <Swish.Tag.portal id={@dialog.portal_id} target={@target} update={@update}>
+    <Swish.Tag.portal 
+      id={@dialog.portal_id} 
+      target={@target}
+      update={@update}
+      phx-mounted={@dialog.open && show(@dialog)}
+    >
       <%= render_slot(@inner_block) %>
     </Swish.Tag.portal>
     """
@@ -198,4 +191,12 @@ defmodule Swish.Dialog do
 
   defp show(%Dialog{js_show: fun} = dialog, js \\ %JS{}), do: fun.(js, dialog)
   defp hide(%Dialog{js_hide: fun} = dialog, js \\ %JS{}), do: fun.(js, dialog)
+
+  defp open_to_state(%Dialog{open: open}) do 
+    case open do 
+      true -> "open"
+      false -> "closed"
+      _ -> raise "Expected boolean but received: #{inspect(open)}"
+    end
+  end
 end

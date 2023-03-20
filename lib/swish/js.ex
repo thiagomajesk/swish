@@ -25,9 +25,9 @@ defmodule Swish.JS do
         js
         |> JS.dispatch("portal:open", to: "##{dialog.portal_id}")
         |> JS.set_attribute({"data-state", "open"}, to: "##{dialog.id}-trigger")
-        |> JS.set_attribute({"data-state", "open"}, to: "##{dialog.id}-overlay")
+        |> JS.set_attribute({"data-state", "open"}, to: "##{dialog.id}-backdrop")
         |> JS.set_attribute({"data-state", "open"}, to: "##{dialog.id}-content")
-        |> JS.show(to: "##{dialog.id}-overlay")
+        |> JS.show(to: "##{dialog.id}-backdrop")
         |> JS.show(to: "##{dialog.id}-container")
         |> JS.focus_first(to: "##{dialog.id}-content")
       end
@@ -36,10 +36,10 @@ defmodule Swish.JS do
       def hide_dialog(js \\ %JS{}, %Swish.Dialog{} = dialog) do
         js
         |> JS.pop_focus()
-        |> JS.hide(to: "##{dialog.id}-overlay")
+        |> JS.hide(to: "##{dialog.id}-backdrop")
         |> JS.hide(to: "##{dialog.id}-container")
         |> JS.set_attribute({"data-state", "closed"}, to: "##{dialog.id}-trigger")
-        |> JS.set_attribute({"data-state", "closed"}, to: "##{dialog.id}-overlay")
+        |> JS.set_attribute({"data-state", "closed"}, to: "##{dialog.id}-backdrop")
         |> JS.set_attribute({"data-state", "closed"}, to: "##{dialog.id}-content")
         |> JS.dispatch("portal:close", to: "##{dialog.portal_id}")
       end

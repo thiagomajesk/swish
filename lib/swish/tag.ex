@@ -79,6 +79,7 @@ defmodule Swish.Tag do
   attr :id, :string, required: true
   attr :target, :string, default: "body"
   attr :update, :string, values: ~w(prepend append origin), default: "origin"
+  attr :rest, :global
   slot :inner_block, required: true
 
   def portal(assigns) do
@@ -88,6 +89,7 @@ defmodule Swish.Tag do
       phx-hook="Swish.Portal"
       data-target={@target}
       data-update={@update}
+      {@rest}
     >
       <%= render_slot(@inner_block) %>
     </template>
