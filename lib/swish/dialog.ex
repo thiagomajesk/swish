@@ -30,8 +30,8 @@ defmodule Swish.Dialog do
 
   @type t :: %Swish.Dialog{}
 
-  @enforce_keys [:id, :portal_id, :open]
-  defstruct [:id, :portal_id, :js_show, :js_hide, :open]
+  @enforce_keys [:id, :portal_id, :open, :static]
+  defstruct [:id, :portal_id, :js_show, :js_hide, :open, :static]
 
   use Phoenix.Component
 
@@ -49,12 +49,14 @@ defmodule Swish.Dialog do
       portal_id: "portal-#{portal_id}",
       js_show: Function.capture(js_module, :show_dialog, 2),
       js_hide: Function.capture(js_module, :hide_dialog, 2),
-      open: false
+      open: false,
+      static: false
     }
   end
 
   attr(:id, :string, required: false)
   attr(:open, :boolean, default: false)
+  attr(:static, :boolean, default: false)
   attr(:dialog, Dialog, required: false)
 
   attr(:rest, :global)
@@ -62,7 +64,7 @@ defmodule Swish.Dialog do
 
   def root(assigns) do
     assigns = assign_new(assigns, :dialog, fn -> 
-      %{ Dialog.new() | open: assigns.open} 
+      %{ Dialog.new() | open: assigns.open, static: assigns.static } 
     end)
 
     ~H"""
@@ -127,9 +129,9 @@ defmodule Swish.Dialog do
     ~H"""
     <.focus_wrap
       id={@id}
-      phx-key="escape"
-      phx-window-keydown={hide(@dialog)}
-      phx-click-away={hide(@dialog)}
+      phx-key={unless @dialog.static, do: "escape"}
+      phx-window-keydown={unless @dialog.static, do: hide(@dialog)}
+      phx-click-away={unless @dialog.static, do: hide(@dialog)}
       data-state={open_to_state(@dialog)}
       role="dialog"
       aria-modal="true"
