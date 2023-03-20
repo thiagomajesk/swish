@@ -28,7 +28,7 @@ defmodule Swish.JS do
         |> JS.set_attribute({"data-state", "open"}, to: "##{dialog.id}-backdrop")
         |> JS.set_attribute({"data-state", "open"}, to: "##{dialog.id}-content")
         |> JS.show(to: "##{dialog.id}-backdrop")
-        |> JS.show(to: "##{dialog.id}-container")
+        |> JS.show(to: "##{dialog.id}-content")
         |> JS.focus_first(to: "##{dialog.id}-content")
       end
 
@@ -37,7 +37,7 @@ defmodule Swish.JS do
         js
         |> JS.pop_focus()
         |> JS.hide(to: "##{dialog.id}-backdrop")
-        |> JS.hide(to: "##{dialog.id}-container")
+        |> JS.hide(to: "##{dialog.id}-content")
         |> JS.set_attribute({"data-state", "closed"}, to: "##{dialog.id}-trigger")
         |> JS.set_attribute({"data-state", "closed"}, to: "##{dialog.id}-backdrop")
         |> JS.set_attribute({"data-state", "closed"}, to: "##{dialog.id}-content")
