@@ -98,7 +98,12 @@ defmodule Swish.Dialog do
     assigns = assign(assigns, id: "#{assigns.dialog.id}-backdrop")
 
     ~H"""
-    <div id={@id} data-state={open_to_state(@dialog)} aria-hidden="true" {@rest}>
+    <div 
+      id={@id} 
+      data-state={open_to_state(@dialog)} 
+      aria-hidden={if @dialog.open, do: "false", else: "true"} 
+      {@rest}
+    >
       <%= render_slot(@inner_block) %>
     </div>
     """
@@ -132,6 +137,8 @@ defmodule Swish.Dialog do
       phx-key={unless @dialog.static, do: "escape"}
       phx-window-keydown={unless @dialog.static, do: hide(@dialog)}
       phx-click-away={unless @dialog.static, do: hide(@dialog)}
+      aria-labelledby={"#{@dialog.id}-title"}
+      aria-describedby={"#{@dialog.id}-description"}
       data-state={open_to_state(@dialog)}
       role="dialog"
       aria-modal="true"
