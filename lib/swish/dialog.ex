@@ -31,41 +31,46 @@ defmodule Swish.Dialog do
   @type t :: %Swish.Dialog{}
 
   @enforce_keys [:id, :portal_id]
-  defstruct [:id, :portal_id]
+  defstruct [:id, :portal_id, :js_show, :js_hide]
 
   use Phoenix.Component
+
+  alias __MODULE__
   alias Phoenix.LiveView.JS
+
+  @doc false
+  def new() do
+    js_module = Swish.JS.dynamic!()
+    dialog_id = System.unique_integer([:positive, :monotonic])
+    portal_id = System.unique_integer()
+
+    %Dialog{
+      id: "dialog-#{dialog_id}",
+      portal_id: "portal-#{portal_id}",
+      js_show: Function.capture(js_module, :show_dialog, 2),
+      js_hide: Function.capture(js_module, :hide_dialog, 2)
+    }
+  end
 
   attr(:id, :string, required: false)
   attr(:show, :boolean, default: false)
-  attr(:dialog, __MODULE__, required: false)
+  attr(:dialog, Dialog, required: false)
 
   attr(:rest, :global)
   slot(:inner_block, required: true)
 
   def root(assigns) do
-    assigns =
-      assign_new(assigns, :id, fn ->
-        "dialog-#{System.unique_integer([:positive, :monotonic])}"
-      end)
-
-    assigns =
-      assign_new(assigns, :dialog, fn %{id: id} ->
-        %__MODULE__{
-          id: id,
-          portal_id: "portal-#{System.unique_integer()}"
-        }
-      end)
+    assigns = assign_new(assigns, :dialog, fn -> Dialog.new() end)
 
     ~H"""
-    <div id={@id} {@rest}>
+    <div id={@dialog.id} {@rest}>
       <%= render_slot(@inner_block, @dialog) %>
     </div>
     """
   end
 
   attr(:show, :boolean, default: false)
-  attr(:dialog, __MODULE__, required: true)
+  attr(:dialog, Dialog, required: true)
   attr(:rest, :global)
   slot(:inner_block, required: true)
 
@@ -73,13 +78,13 @@ defmodule Swish.Dialog do
     assigns = assign(assigns, id: "#{assigns.dialog.id}-container")
 
     ~H"""
-    <div id={@id} phx-mounted={@show && show(@dialog)} phx-remove={hide(@dialog.id)}>
+    <div id={@id} phx-mounted={@show && show(@dialog)} phx-remove={hide(@dialog)}>
       <%= render_slot(@inner_block) %>
     </div>
     """
   end
 
-  attr(:dialog, __MODULE__, required: true)
+  attr(:dialog, Dialog, required: true)
   slot(:inner_block, required: true)
 
   def trigger(assigns) do
@@ -94,7 +99,7 @@ defmodule Swish.Dialog do
     """
   end
 
-  attr(:dialog, __MODULE__, required: true)
+  attr(:dialog, Dialog, required: true)
   slot(:inner_block, required: true)
   attr(:rest, :global)
 
@@ -108,13 +113,13 @@ defmodule Swish.Dialog do
     """
   end
 
-  attr(:dialog, __MODULE__, required: true)
+  attr(:dialog, Dialog, required: true)
   slot(:inner_block, required: true)
 
   def close(assigns) do
     assigns =
       assign(assigns, :attrs, %{
-        "phx-click" => hide(%JS{}, assigns.dialog),
+        "phx-click" => hide(assigns.dialog),
         "id" => "#{assigns.dialog.id}-close"
       })
 
@@ -123,8 +128,7 @@ defmodule Swish.Dialog do
     """
   end
 
-  attr(:dialog, __MODULE__, required: true)
-  attr(:on_close, JS, default: %JS{})
+  attr(:dialog, Dialog, required: true)
   attr(:rest, :global)
   slot(:inner_block, required: true)
 
@@ -135,8 +139,8 @@ defmodule Swish.Dialog do
     <.focus_wrap
       id={@id}
       phx-key="escape"
-      phx-window-keydown={hide(@on_close, @dialog)}
-      phx-click-away={hide(@on_close, @dialog)}
+      phx-window-keydown={hide(@dialog)}
+      phx-click-away={hide(@dialog)}
       role="dialog"
       aria-modal="true"
       tabindex="0"
@@ -148,7 +152,7 @@ defmodule Swish.Dialog do
   end
 
   attr(:as, :string, default: "h2")
-  attr(:dialog, __MODULE__, required: true)
+  attr(:dialog, Dialog, required: true)
   attr(:rest, :global)
   slot(:inner_block, required: true)
 
@@ -163,7 +167,7 @@ defmodule Swish.Dialog do
   end
 
   attr(:as, :string, default: "p")
-  attr(:dialog, __MODULE__, required: true)
+  attr(:dialog, Dialog, required: true)
   attr(:rest, :global)
   slot(:inner_block, required: true)
 
@@ -177,7 +181,7 @@ defmodule Swish.Dialog do
     """
   end
 
-  attr(:dialog, __MODULE__, required: true)
+  attr(:dialog, Dialog, required: true)
   attr(:target, :string, default: "body")
   attr(:update, :string, values: ~w(prepend append origin), default: "origin")
   slot(:inner_block, required: true)
@@ -190,11 +194,6 @@ defmodule Swish.Dialog do
     """
   end
 
-  defp show(js \\ %JS{}, dialog) do
-    Swish.JS.dynamic!().show_dialog(js, dialog)
-  end
-
-  defp hide(js \\ %JS{}, dialog) do
-    Swish.JS.dynamic!().hide_dialog(js, dialog)
-  end
+  defp show(%Dialog{js_show: fun} = dialog, js \\ %JS{}), do: fun.(js, dialog)
+  defp hide(%Dialog{js_hide: fun} = dialog, js \\ %JS{}), do: fun.(js, dialog)
 end
