@@ -176,6 +176,8 @@ defmodule Swish.Dialog do
   attr(:dialog, Dialog, required: true)
   attr(:target, :string, default: "body")
   attr(:update, :string, values: ~w(prepend append origin), default: "origin")
+  attr(:destroy_delay, :integer, default: 500)
+
   slot(:inner_block, required: true)
 
   def portal(assigns) do
@@ -184,6 +186,7 @@ defmodule Swish.Dialog do
       id={@dialog.portal_id} 
       target={@target}
       update={@update}
+      destroy_delay={@destroy_delay}
       phx-mounted={@dialog.open && show(@dialog)}
     >
       <%= render_slot(@inner_block) %>
