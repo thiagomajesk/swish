@@ -1,4 +1,4 @@
-import { getAttributeOrThrow } from "../utils/attribute"
+import { getAttributeOrThrow, parseInteger } from "../utils/attribute"
 
 /**
  * A hook used to create a Portal in the DOM.
@@ -12,6 +12,7 @@ import { getAttributeOrThrow } from "../utils/attribute"
  * 
  *  * `data-update` - the operation to be executed, it can be either: origin (default), append or prepend.
  *  * `data-target` - the DOM element where the portal is going to be placed. 
+ *  * `data-destroy-delay` - delay to remove teleported elements in ms after closing the portal
  */
 
 // Cache a list of possible DOM events that we want to forward
@@ -44,11 +45,14 @@ export default {
   update: null,
   eventsTimeout: null,
   destroyTimeout: null,
+  destroyDelay: null,
 
   mounted() {
     const targetSelector = getAttributeOrThrow(this.el, "data-target");
+
     this.target = document.querySelector(targetSelector);
     this.update = getAttributeOrThrow(this.el, "data-update");
+    this.destroyDelay = getAttributeOrThrow(this.el, "data-destroy-delay", parseInteger);
 
     this.el.addEventListener("portal:open", this.handleOpen.bind(this));
     this.el.addEventListener("portal:close", this.handleClose.bind(this));
@@ -79,6 +83,6 @@ export default {
 
     // Await a little before removing the element so animations can be properly displayed. 
     // Ideally this shoud be configurable in the future so the user has more control over it.
-    this.destroyTimeout = setTimeout(() => clone.remove(), 1000);
+    this.destroyTimeout = setTimeout(() => clone.remove(), this.destroyDelay);
   }
 }

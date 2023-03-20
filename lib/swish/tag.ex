@@ -79,6 +79,7 @@ defmodule Swish.Tag do
   attr :id, :string, required: true
   attr :target, :string, default: "body"
   attr :update, :string, values: ~w(prepend append origin), default: "origin"
+  attr :destroy_delay, :integer, default: 500
   attr :rest, :global
   slot :inner_block, required: true
 
@@ -89,6 +90,7 @@ defmodule Swish.Tag do
       phx-hook="Swish.Portal"
       data-target={@target}
       data-update={@update}
+      data-destroy-delay={@destroy_delay}
       {@rest}
     >
       <%= render_slot(@inner_block) %>
