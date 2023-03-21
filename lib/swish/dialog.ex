@@ -1,3 +1,8 @@
+defmodule Swish.Dialog.Transitions do 
+  @moduledoc false
+  defstruct [:show_content, :hide_content, :show_backdrop, :hide_backdrop]
+end
+
 defmodule Swish.Dialog do
   @moduledoc """
   A dialog is a window overlaid on either the primary window or another dialog window.
@@ -30,12 +35,14 @@ defmodule Swish.Dialog do
 
   @type t :: %Swish.Dialog{}
 
-  @enforce_keys [:id, :portal_id, :open, :static]
-  defstruct [:id, :portal_id, :js_show, :js_hide, :open, :static]
+  @enforce_keys [:id, :portal_id, :open, :static, :close_delay, :open_delay, :transitions]
+  defstruct [:id, :portal_id, :js_show, :js_hide, :open, :static,
+    :close_delay, :open_delay, :transitions]
 
   use Phoenix.Component
 
   alias __MODULE__
+  alias Swish.Dialog
   alias Phoenix.LiveView.JS
 
   @doc false
@@ -50,13 +57,20 @@ defmodule Swish.Dialog do
       js_show: Function.capture(js_module, :show_dialog, 2),
       js_hide: Function.capture(js_module, :hide_dialog, 2),
       open: false,
-      static: false
+      static: false,
+      open_delay: 200,
+      close_delay: 200,
+      transitions: %Dialog.Transitions{}
     }
   end
 
   attr(:id, :string, required: false)
   attr(:open, :boolean, default: false)
   attr(:static, :boolean, default: false)
+  attr(:open_delay, :integer, default: 200)
+  attr(:close_delay, :integer, default: 200)
+  attr(:transitions, Dialog.Transitions, default: %Dialog.Transitions{})
+
   attr(:dialog, Dialog, required: false)
 
   attr(:rest, :global)
@@ -64,7 +78,13 @@ defmodule Swish.Dialog do
 
   def root(assigns) do
     assigns = assign_new(assigns, :dialog, fn ->
-      %{ Dialog.new() | open: assigns.open, static: assigns.static }
+      %{ Dialog.new() | 
+        open: assigns.open,
+        static: assigns.static,
+        open_delay: assigns.open_delay,
+        close_delay: assigns.close_delay,
+        transitions: assigns.transitions
+      }
     end)
 
     ~H"""
@@ -187,8 +207,6 @@ defmodule Swish.Dialog do
   attr(:dialog, Dialog, required: true)
   attr(:target, :string, default: "body")
   attr(:update, :string, values: ~w(prepend append origin), default: "origin")
-  attr(:open_delay, :integer, default: 150)
-  attr(:close_delay, :integer, default: 300)
 
   slot(:inner_block, required: true)
 
@@ -198,8 +216,7 @@ defmodule Swish.Dialog do
       id={@dialog.portal_id}
       target={@target}
       update={@update}
-      open_delay={@open_delay}
-      close_delay={@close_delay}
+      close_delay={@dialog.close_delay}
       aria-hidden="true"
       phx-mounted={@dialog.open && show(@dialog)}
     >
