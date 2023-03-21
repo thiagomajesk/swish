@@ -57,7 +57,7 @@ defmodule Swish.Toast do
     }
   end
 
-  attr(:id, :string)
+  attr(:id, :string, default: nil)
   attr(:toast, Toast, required: false)
   attr(:group, Group, required: false)
   attr(:flash, :map, default: %{})
