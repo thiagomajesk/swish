@@ -102,7 +102,7 @@ defmodule Swish.Dialog do
     <div
       id={@id}
       data-state={open_to_state(@dialog)}
-      aria-hidden={if @dialog.open, do: "false", else: "true"}
+      aria-hidden={to_string(@dialog.open)}
       style="pointer-events: auto"
       {@rest}
     >
