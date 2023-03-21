@@ -1,3 +1,8 @@
+defmodule Swish.Dialog.Transitions do 
+  @moduledoc false
+  defstruct [:show_content, :hide_content, :show_backdrop, :hide_backdrop]
+end
+
 defmodule Swish.Dialog do
   @moduledoc """
   A dialog is a window overlaid on either the primary window or another dialog window.
@@ -16,13 +21,13 @@ defmodule Swish.Dialog do
     <button {attrs}>Open Dialog</button>
   </Swish.Dialog.trigger>
   <Swish.Dialog.portal dialog={dialog}>
-    <Swish.Dialog.overlay dialog={dialog}>
+    <Swish.Dialog.backdrop dialog={dialog}>
   	  <Swish.Dialog.content dialog={dialog}>
   		  <Swish.Dialog.title dialog={dialog}>Welcome to Swish!</Swish.Dialog.title>
   			<Swish.Dialog.description dialog={dialog}>Swish is a UI toolkit for busy developers</Swish.Dialog.description>
         <p>Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.</p>
   		</Swish.Dialog.content>
-    </Swish.Dialog.overlay>
+    </Swish.Dialog.backdrop>
   </Swish.Dialog.portal>
   </Swish.Dialog.root>
   ```
@@ -30,12 +35,14 @@ defmodule Swish.Dialog do
 
   @type t :: %Swish.Dialog{}
 
-  @enforce_keys [:id, :portal_id]
-  defstruct [:id, :portal_id, :js_show, :js_hide]
+  @enforce_keys [:id, :portal_id, :open, :static, :close_delay, :open_delay, :transitions]
+  defstruct [:id, :portal_id, :js_show, :js_hide, :open, :static,
+    :close_delay, :open_delay, :transitions]
 
   use Phoenix.Component
 
   alias __MODULE__
+  alias Swish.Dialog
   alias Phoenix.LiveView.JS
 
   @doc false
@@ -48,38 +55,41 @@ defmodule Swish.Dialog do
       id: "dialog-#{dialog_id}",
       portal_id: "portal-#{portal_id}",
       js_show: Function.capture(js_module, :show_dialog, 2),
-      js_hide: Function.capture(js_module, :hide_dialog, 2)
+      js_hide: Function.capture(js_module, :hide_dialog, 2),
+      open: false,
+      static: false,
+      open_delay: 200,
+      close_delay: 200,
+      transitions: %Dialog.Transitions{}
     }
   end
 
   attr(:id, :string, required: false)
-  attr(:show, :boolean, default: false)
+  attr(:open, :boolean, default: false)
+  attr(:static, :boolean, default: false)
+  attr(:open_delay, :integer, default: 200)
+  attr(:close_delay, :integer, default: 200)
+  attr(:transitions, Dialog.Transitions, default: %Dialog.Transitions{})
+
   attr(:dialog, Dialog, required: false)
 
   attr(:rest, :global)
   slot(:inner_block, required: true)
 
   def root(assigns) do
-    assigns = assign_new(assigns, :dialog, fn -> Dialog.new() end)
+    assigns = assign_new(assigns, :dialog, fn ->
+      %{ Dialog.new() | 
+        open: assigns.open,
+        static: assigns.static,
+        open_delay: assigns.open_delay,
+        close_delay: assigns.close_delay,
+        transitions: assigns.transitions
+      }
+    end)
 
     ~H"""
     <div id={@dialog.id} {@rest}>
       <%= render_slot(@inner_block, @dialog) %>
-    </div>
-    """
-  end
-
-  attr(:show, :boolean, default: false)
-  attr(:dialog, Dialog, required: true)
-  attr(:rest, :global)
-  slot(:inner_block, required: true)
-
-  def container(assigns) do
-    assigns = assign(assigns, id: "#{assigns.dialog.id}-container")
-
-    ~H"""
-    <div id={@id} phx-mounted={@show && show(@dialog)} phx-remove={hide(@dialog)}>
-      <%= render_slot(@inner_block) %>
     </div>
     """
   end
@@ -90,8 +100,10 @@ defmodule Swish.Dialog do
   def trigger(assigns) do
     assigns =
       assign(assigns, :attrs, %{
-        "phx-click" => show(assigns.dialog),
-        "id" => "#{assigns.dialog.id}-trigger"
+        "aria-haspopup" => "dialog",
+        "phx-click" => JS.exec("data-show", to: "##{assigns.dialog.portal_id}"),
+        "id" => "#{assigns.dialog.id}-trigger",
+        "data-state" => open_to_state(assigns.dialog)
       })
 
     ~H"""
@@ -103,11 +115,17 @@ defmodule Swish.Dialog do
   slot(:inner_block, required: true)
   attr(:rest, :global)
 
-  def overlay(assigns) do
-    assigns = assign(assigns, id: "#{assigns.dialog.id}-overlay")
+  def backdrop(assigns) do
+    assigns = assign(assigns, id: "#{assigns.dialog.id}-backdrop")
 
     ~H"""
-    <div id={@id} {@rest} aria-hidden="true">
+    <div
+      id={@id}
+      data-state={open_to_state(@dialog)}
+      aria-hidden="true"
+      style="pointer-events: auto"
+      {@rest}
+    >
       <%= render_slot(@inner_block) %>
     </div>
     """
@@ -119,6 +137,7 @@ defmodule Swish.Dialog do
   def close(assigns) do
     assigns =
       assign(assigns, :attrs, %{
+        "aria-label" => "Close",
         "phx-click" => hide(assigns.dialog),
         "id" => "#{assigns.dialog.id}-close"
       })
@@ -138,12 +157,17 @@ defmodule Swish.Dialog do
     ~H"""
     <.focus_wrap
       id={@id}
-      phx-key="escape"
-      phx-window-keydown={hide(@dialog)}
-      phx-click-away={hide(@dialog)}
+      phx-key={unless @dialog.static, do: "escape"}
+      data-hide={unless @dialog.static, do: hide(@dialog)}
+      phx-click-away={JS.exec("data-hide")}
+      phx-window-keydown={JS.exec("data-hide")}
+      aria-labelledby={"#{@dialog.id}-title"}
+      aria-describedby={"#{@dialog.id}-description"}
+      data-state={open_to_state(@dialog)}
       role="dialog"
       aria-modal="true"
-      tabindex="0"
+      tabindex="-1"
+      style="pointer-events: auto"
       {@rest}
     >
       <%= render_slot(@inner_block) %>
@@ -184,11 +208,20 @@ defmodule Swish.Dialog do
   attr(:dialog, Dialog, required: true)
   attr(:target, :string, default: "body")
   attr(:update, :string, values: ~w(prepend append origin), default: "origin")
+
   slot(:inner_block, required: true)
 
   def portal(assigns) do
     ~H"""
-    <Swish.Tag.portal id={@dialog.portal_id} target={@target} update={@update}>
+    <Swish.Tag.portal
+      data-show={show(@dialog)}
+      id={@dialog.portal_id}
+      target={@target}
+      update={@update}
+      close_delay={@dialog.close_delay}
+      aria-hidden="true"
+      phx-mounted={@dialog.open && JS.exec("data-show")}
+    >
       <%= render_slot(@inner_block) %>
     </Swish.Tag.portal>
     """
@@ -196,4 +229,12 @@ defmodule Swish.Dialog do
 
   defp show(%Dialog{js_show: fun} = dialog, js \\ %JS{}), do: fun.(js, dialog)
   defp hide(%Dialog{js_hide: fun} = dialog, js \\ %JS{}), do: fun.(js, dialog)
+
+  defp open_to_state(%Dialog{open: open}) do
+    case open do
+      true -> "open"
+      false -> "closed"
+      _ -> raise "Expected boolean but received: #{inspect(open)}"
+    end
+  end
 end

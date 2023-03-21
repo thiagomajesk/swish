@@ -1,4 +1,4 @@
-import { getAttributeOrThrow } from "../utils/attribute"
+import { getAttributeOrThrow, parseInteger } from "../utils/attribute"
 
 /**
  * A hook used to create a Portal in the DOM.
@@ -12,6 +12,7 @@ import { getAttributeOrThrow } from "../utils/attribute"
  * 
  *  * `data-update` - the operation to be executed, it can be either: origin (default), append or prepend.
  *  * `data-target` - the DOM element where the portal is going to be placed. 
+ *  * `data-close-delay` - delay in ms to close the open portal.
  */
 
 // Cache a list of possible DOM events that we want to forward
@@ -42,13 +43,15 @@ export default {
   clone: null,
   target: null,
   update: null,
-  eventsTimeout: null,
-  destroyTimeout: null,
+  closeDelay: null,
+  closeTimeout: null,
 
   mounted() {
     const targetSelector = getAttributeOrThrow(this.el, "data-target");
+
     this.target = document.querySelector(targetSelector);
     this.update = getAttributeOrThrow(this.el, "data-update");
+    this.closeDelay = getAttributeOrThrow(this.el, "data-close-delay", parseInteger);
 
     this.el.addEventListener("portal:open", this.handleOpen.bind(this));
     this.el.addEventListener("portal:close", this.handleClose.bind(this));
@@ -58,27 +61,26 @@ export default {
     this.clone.remove();
 
     // Removes the timeouts just to be sure 
-    clearTimeout(this.eventsTimeout);
-    clearTimeout(this.destroyTimeout);
+    clearTimeout(this.closeTimeout);
   },
 
   handleOpen() {
-    let clone = this.el.content.cloneNode(true);
-    this.clone = clone.firstElementChild;
+    this.clone = this.el.content.cloneNode(true).firstElementChild;
 
-    // Teleports clone to target
-    updates[this.update](this.target, this.clone)
+    // Opens the portal and teleports clone to target.
+    // Await a little before opening so animation ca be properly displayed.
+    updates[this.update](this.target, this.clone);
 
     // Await until next tick to register the forwarded events
-    this.eventsTimeout = setTimeout(() => forwardEvents(this.el, this.clone), 0)
+    forwardEvents(this.el, this.clone)
   },
 
   handleClose() {
     // Cache old clone to avoid race conditions
-    let clone = this.clone
+    const clone = this.clone
 
-    // Await a little before removing the element so animations can be properly displayed. 
-    // Ideally this shoud be configurable in the future so the user has more control over it.
-    this.destroyTimeout = setTimeout(() => clone.remove(), 1000);
-  }
+    // Closes the portal and removes the cloned element.
+    // Await a little before closing so animations can be properly displayed. 
+    this.closeTimeout = setTimeout(() => clone.remove(), this.closeDelay);
+  },
 }
