@@ -102,7 +102,7 @@ defmodule Swish.Dialog do
     <div
       id={@id}
       data-state={open_to_state(@dialog)}
-      aria-hidden={to_string(@dialog.open)}
+      aria-hidden="true"
       style="pointer-events: auto"
       {@rest}
     >
@@ -198,6 +198,7 @@ defmodule Swish.Dialog do
       target={@target}
       update={@update}
       destroy_delay={@destroy_delay}
+      aria-hidden="true"
       phx-mounted={@dialog.open && show(@dialog)}
     >
       <%= render_slot(@inner_block) %>
