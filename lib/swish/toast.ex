@@ -30,8 +30,8 @@ defmodule Swish.Toast do
   """
   @type t :: %Swish.Toast{}
 
-  @enforce_keys [:id, :kind]
-  defstruct [:id, :kind, :message, :js_show, :js_hide]
+  @enforce_keys [:id, :kind, :message]
+  defstruct [:id, :kind, :flash, :message, :group, :js_show, :js_hide]
 
   use Phoenix.Component
 
@@ -40,19 +40,24 @@ defmodule Swish.Toast do
   alias Phoenix.LiveView.JS
 
   @doc false
-  def new() do
+  def new(attrs \\ %{}) do
     js_module = Swish.JS.dynamic!()
     toast_id = System.unique_integer([:positive, :monotonic])
 
+    kind = attrs[:kind] || :info
+    flash = attrs[:flash] || %{}
+
     %Toast{
-      id: "toast-#{toast_id}",
-      kind: :info,
+      id: attrs[:id] || "toast-#{toast_id}",
+      kind: attrs[:kind] || :info,
+      group: attrs[:group],
+      message: attrs[:message] || Phoenix.Flash.get(flash, kind),
       js_show: Function.capture(js_module, :show_toast, 2),
       js_hide: Function.capture(js_module, :hide_toast, 2)
     }
   end
 
-  attr(:id, :string, default: "flash")
+  attr(:id, :string)
   attr(:toast, Toast, required: false)
   attr(:group, Group, required: false)
   attr(:flash, :map, default: %{})
@@ -64,19 +69,20 @@ defmodule Swish.Toast do
   def root(assigns) do
     assigns =
       assign_new(assigns, :toast, fn ->
-        Map.merge(Toast.new(), %{
+        Toast.new(%{
           id: assigns.id,
+          flash: assigns.flash,
           kind: assigns.kind,
-          message: Phoenix.Flash.get(assigns.flash, assigns.kind)
+          group: assigns.group
         })
       end)
 
     ~H"""
     <.dynamic_tag
       :if={@toast.message}
-      id={@id}
+      id={@toast.id}
       role="alert"
-      name={(@group && "li") || @as}
+      name={(@toast.group && "li") || @as}
       phx-mounted={show(@toast)}
       phx-click={hide(@toast)}
       tabindex="0"

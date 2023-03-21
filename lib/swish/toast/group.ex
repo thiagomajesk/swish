@@ -7,6 +7,7 @@ defmodule Swish.Toast.Group do
   use Phoenix.Component
 
   alias __MODULE__
+  alias Phoenix.LiveView.JS
 
   @doc false
   def new() do
@@ -27,7 +28,7 @@ defmodule Swish.Toast.Group do
     assigns = assign_new(assigns, :group, fn -> Group.new() end)
 
     ~H"""
-    <Swish.Tag.portal id={@group.portal_id}>
+    <Swish.Tag.portal id={@group.portal_id} phx-mounted={JS.dispatch("portal:open")}>
       <ol tabindex="-1" {@rest}>
         <%= render_slot(@inner_block, @group) %>
       </ol>
