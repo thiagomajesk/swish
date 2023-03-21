@@ -80,6 +80,7 @@ defmodule Swish.Dialog do
   def trigger(assigns) do
     assigns =
       assign(assigns, :attrs, %{
+        "aria-haspopup" => "dialog",
         "phx-click" => show(assigns.dialog),
         "id" => "#{assigns.dialog.id}-trigger",
         "data-state" => open_to_state(assigns.dialog)
