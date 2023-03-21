@@ -4,70 +4,59 @@ defmodule Swish.Toast do
 
   ## Markup example
 
+  ### Within a group
+
   ```heex
-  <Swish.Toast.portal>
-    <Swish.Toast.group :let={group}>
-      <Swish.Toast.root flash={@flash} kind={:info} :let={toast} group={group}>
-        <Swish.Toast.title>Welcome to Swish!!</Swish.Toast.title>
-        <Swish.Toast.description><%= toast.message %></Swish.Toast.description>
-        <Swish.Toast.action>Confirm</Swish.Toast.action>
-        <Swish.Toast.close>Close</Swish.Toast.close>
-      </Swish.Toast.root>
-    </Swish.Toast.group>
-  </Swish.Toast.portal>
+  <Swish.Toast.Group.root :let={group}>
+    <Swish.Toast.root :let={toast} flash={@flash} kind={:info} group={group}>
+      <Swish.Toast.title>Welcome to Swish!!</Swish.Toast.title>
+      <Swish.Toast.description><%= toast.message %></Swish.Toast.description>
+      <Swish.Toast.action>Confirm</Swish.Toast.action>
+      <Swish.Toast.close>Close</Swish.Toast.close>
+    </Swish.Toast.root>
+  </Swish.Toast.Group.root>
+  ```
+
+  ### Without a group
+
+  ```heex
+  <Swish.Toast.root :let={toast} flash={@flash} kind={:info}>
+    <Swish.Toast.title>Welcome to Swish!!</Swish.Toast.title>
+    <Swish.Toast.description><%= toast.message %></Swish.Toast.description>
+    <Swish.Toast.action>Confirm</Swish.Toast.action>
+    <Swish.Toast.close>Close</Swish.Toast.close>
+  </Swish.Toast.root>
   ```
   """
-  @type t :: %Swish.Dialog{}
+  @type t :: %Swish.Toast{}
 
-  @enforce_keys [:id, :portal_id, :message]
-  defstruct [:id, :portal_id, :message]
+  @enforce_keys [:id, :kind]
+  defstruct [:id, :kind, :message, :js_show, :js_hide]
 
   use Phoenix.Component
 
+  alias __MODULE__
+  alias Swish.Toast.Group
   alias Phoenix.LiveView.JS
 
-  attr(:target, :string, default: "body")
-  attr(:update, :string, values: ~w(prepend append origin), default: "origin")
-  slot(:inner_block, required: true)
+  @doc false
+  def new() do
+    js_module = Swish.JS.dynamic!()
+    toast_id = System.unique_integer([:positive, :monotonic])
 
-  def portal(assigns) do
-    ~H"""
-    <Swish.Tag.portal id={@flash.portal_id} target={@target} update={@update}>
-      <%= render_slot(@inner_block) %>
-    </Swish.Tag.portal>
-    """
-  end
-
-  attr(:duration, :integer, default: 500)
-  attr(:swipe_direction, :string, values: ~w(right left up down))
-  attr(:swipe_threshold, :integer, default: 50)
-  slot(:inner_block, required: true)
-
-  def group(assigns) do
-    assigns =
-      assign(assigns, :group, %{
-        id: System.unique_integer([:positive]),
-        next_index: Function.capture(__MODULE__, :next_tabindex, 0)
-      })
-
-    ~H"""
-    <ol tabindex="-1">
-      <%= render_slot(@inner_block, @group) %>
-    </ol>
-    """
+    %Toast{
+      id: "toast-#{toast_id}",
+      kind: :info,
+      js_show: Function.capture(js_module, :show_toast, 2),
+      js_hide: Function.capture(js_module, :hide_toast, 2)
+    }
   end
 
   attr(:id, :string, default: "flash")
-  attr(:toast, __MODULE__, required: false)
-  attr(:group, :map, required: false)
+  attr(:toast, Toast, required: false)
+  attr(:group, Group, required: false)
   attr(:flash, :map, default: %{})
   attr(:kind, :atom, values: [:info, :error])
-  attr(:autoshow, :boolean, default: true)
-  attr(:close, :boolean, default: true)
-  attr(:duration, :integer, default: 500)
-  attr(:tabindex, :integer, default: -1)
-  attr(:swipe_direction, :string, values: ~w(right left up down))
-  attr(:swipe_threshold, :integer, default: 50)
   attr(:as, :string, default: "div")
   slot(:inner_block, required: true)
   attr(:rest, :global)
@@ -75,11 +64,11 @@ defmodule Swish.Toast do
   def root(assigns) do
     assigns =
       assign_new(assigns, :toast, fn ->
-        %__MODULE__{
-          id: "toast-#{System.unique_integer()}",
-          portal_id: "portal-#{System.unique_integer()}",
+        Map.merge(Toast.new(), %{
+          id: assigns.id,
+          kind: assigns.kind,
           message: Phoenix.Flash.get(assigns.flash, assigns.kind)
-        }
+        })
       end)
 
     ~H"""
@@ -88,76 +77,55 @@ defmodule Swish.Toast do
       id={@id}
       role="alert"
       name={(@group && "li") || @as}
-      tabindex={@group && @group.next_index.() && @tabindex}
+      phx-mounted={show(@toast)}
+      phx-click={hide(@toast)}
+      tabindex="0"
+      {@rest}
     >
       <%= render_slot(@inner_block, @toast) %>
     </.dynamic_tag>
     """
   end
 
-  attr(:toast, __MODULE__, required: false)
+  attr(:toast, Toast, required: false)
   attr(:as, :string, default: "h6")
+  attr(:rest, :global)
   slot(:inner_block, required: true)
 
   def title(assigns) do
     ~H"""
-    <.dynamic_tag name={@as}>
+    <.dynamic_tag name={@as} {@rest}>
       <%= render_slot(@inner_block) %>
     </.dynamic_tag>
     """
   end
 
-  attr(:toast, __MODULE__, required: false)
+  attr(:toast, Toast, required: false)
   attr(:as, :string, default: "p")
+  attr(:rest, :global)
   slot(:inner_block, required: true)
 
   def description(assigns) do
     ~H"""
-    <.dynamic_tag name={@as}>
+    <.dynamic_tag name={@as} {@rest}>
       <%= render_slot(@inner_block) %>
     </.dynamic_tag>
     """
   end
 
+  attr(:rest, :global)
   slot(:inner_block, required: true)
 
   def close(assigns) do
+    attrs = assigns_to_attributes(assigns.rest)
+    attrs = Keyword.merge(attrs, aria_label: "Close")
+    assigns = assign(assigns, :attrs, attrs)
+
     ~H"""
-    <%= render_slot(@inner_block) %>
+    <%= render_slot(@inner_block, @attrs) %>
     """
   end
 
-  slot(:inner_block, required: true)
-
-  def action(assigns) do
-    ~H"""
-    <%= render_slot(@inner_block) %>
-    """
-  end
-
-  @doc false
-  def next_tabindex() do
-    System.unique_integer([:positive, :monotonic])
-  end
-
-  defp show(js \\ %JS{}, selector) do
-    JS.show(js,
-      to: selector,
-      transition:
-        {"transition-all transform ease-out duration-300",
-         "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95",
-         "opacity-100 translate-y-0 sm:scale-100"}
-    )
-  end
-
-  defp hide(js \\ %JS{}, selector) do
-    JS.hide(js,
-      to: selector,
-      time: 200,
-      transition:
-        {"transition-all transform ease-in duration-200",
-         "opacity-100 translate-y-0 sm:scale-100",
-         "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"}
-    )
-  end
+  defp show(%Toast{js_show: fun} = toast, js \\ %JS{}), do: fun.(js, toast)
+  defp hide(%Toast{js_hide: fun} = toast, js \\ %JS{}), do: fun.(js, toast)
 end
