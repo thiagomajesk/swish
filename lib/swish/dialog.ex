@@ -1,4 +1,4 @@
-defmodule Swish.Dialog.Transitions do 
+defmodule Swish.Dialog.Transitions do
   @moduledoc false
   defstruct [:show_content, :hide_content, :show_backdrop, :hide_backdrop]
 end
@@ -36,8 +36,17 @@ defmodule Swish.Dialog do
   @type t :: %Swish.Dialog{}
 
   @enforce_keys [:id, :portal_id, :open, :static, :close_delay, :open_delay, :transitions]
-  defstruct [:id, :portal_id, :js_show, :js_hide, :open, :static,
-    :close_delay, :open_delay, :transitions]
+  defstruct [
+    :id,
+    :portal_id,
+    :js_show,
+    :js_hide,
+    :open,
+    :static,
+    :close_delay,
+    :open_delay,
+    :transitions
+  ]
 
   use Phoenix.Component
 
@@ -77,15 +86,17 @@ defmodule Swish.Dialog do
   slot(:inner_block, required: true)
 
   def root(assigns) do
-    assigns = assign_new(assigns, :dialog, fn ->
-      %{ Dialog.new() | 
-        open: assigns.open,
-        static: assigns.static,
-        open_delay: assigns.open_delay,
-        close_delay: assigns.close_delay,
-        transitions: assigns.transitions
-      }
-    end)
+    assigns =
+      assign_new(assigns, :dialog, fn ->
+        %{
+          Dialog.new()
+          | open: assigns.open,
+            static: assigns.static,
+            open_delay: assigns.open_delay,
+            close_delay: assigns.close_delay,
+            transitions: assigns.transitions
+        }
+      end)
 
     ~H"""
     <div id={@dialog.id} {@rest}>

@@ -27,16 +27,32 @@ defmodule Swish.JS do
         |> JS.set_attribute({"data-state", "open"}, to: "##{dialog.id}-backdrop")
         |> JS.set_attribute({"data-state", "open"}, to: "##{dialog.id}-content")
         |> JS.set_attribute({"aria-expanded", "true"}, to: "##{dialog.id}-trigger")
-        |> JS.show(to: "##{dialog.id}-backdrop", transition: dialog.transitions.show_backdrop, time: dialog.open_delay)
-        |> JS.show(to: "##{dialog.id}-content", transition: dialog.transitions.show_content, time: dialog.open_delay)
+        |> JS.show(
+          to: "##{dialog.id}-backdrop",
+          transition: dialog.transitions.show_backdrop,
+          time: dialog.open_delay
+        )
+        |> JS.show(
+          to: "##{dialog.id}-content",
+          transition: dialog.transitions.show_content,
+          time: dialog.open_delay
+        )
         |> JS.focus_first(to: "##{dialog.id}-content")
       end
 
       def hide_dialog(js \\ %JS{}, %Swish.Dialog{} = dialog) do
         js
         |> JS.pop_focus()
-        |> JS.hide(to: "##{dialog.id}-backdrop", transition: dialog.transitions.hide_backdrop, time: dialog.close_delay)
-        |> JS.hide(to: "##{dialog.id}-content", transition: dialog.transitions.hide_content, time: dialog.close_delay)
+        |> JS.hide(
+          to: "##{dialog.id}-backdrop",
+          transition: dialog.transitions.hide_backdrop,
+          time: dialog.close_delay
+        )
+        |> JS.hide(
+          to: "##{dialog.id}-content",
+          transition: dialog.transitions.hide_content,
+          time: dialog.close_delay
+        )
         |> JS.set_attribute({"data-state", "closed"}, to: "##{dialog.id}-trigger")
         |> JS.set_attribute({"data-state", "closed"}, to: "##{dialog.id}-backdrop")
         |> JS.set_attribute({"data-state", "closed"}, to: "##{dialog.id}-content")

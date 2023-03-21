@@ -76,12 +76,12 @@ defmodule Swish.Tag do
     """
   end
 
-  attr :id, :string, required: true
-  attr :target, :string, default: "body"
-  attr :update, :string, values: ~w(prepend append origin), default: "origin"
-  attr :close_delay, :integer, default: 0
-  attr :rest, :global
-  slot :inner_block, required: true
+  attr(:id, :string, required: true)
+  attr(:target, :string, default: "body")
+  attr(:update, :string, values: ~w(prepend append origin), default: "origin")
+  attr(:close_delay, :integer, default: 0)
+  attr(:rest, :global)
+  slot(:inner_block, required: true)
 
   def portal(assigns) do
     ~H"""
