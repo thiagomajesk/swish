@@ -11,7 +11,6 @@ defmodule Swish.Toast do
     <Swish.Toast.root :let={toast} flash={@flash} kind={:info} group={group}>
       <Swish.Toast.title>Welcome to Swish!!</Swish.Toast.title>
       <Swish.Toast.description><%= toast.message %></Swish.Toast.description>
-      <Swish.Toast.action>Confirm</Swish.Toast.action>
       <Swish.Toast.close>Close</Swish.Toast.close>
     </Swish.Toast.root>
   </Swish.Toast.Group.root>
@@ -23,7 +22,6 @@ defmodule Swish.Toast do
   <Swish.Toast.root :let={toast} flash={@flash} kind={:info}>
     <Swish.Toast.title>Welcome to Swish!!</Swish.Toast.title>
     <Swish.Toast.description><%= toast.message %></Swish.Toast.description>
-    <Swish.Toast.action>Confirm</Swish.Toast.action>
     <Swish.Toast.close>Close</Swish.Toast.close>
   </Swish.Toast.root>
   ```
