@@ -102,6 +102,7 @@ defmodule Swish.Dialog do
       id={@id}
       data-state={open_to_state(@dialog)}
       aria-hidden={if @dialog.open, do: "false", else: "true"}
+      style="pointer-events: auto"
       {@rest}
     >
       <%= render_slot(@inner_block) %>
@@ -143,6 +144,7 @@ defmodule Swish.Dialog do
       role="dialog"
       aria-modal="true"
       tabindex="-1"
+      style="pointer-events: auto"
       {@rest}
     >
       <%= render_slot(@inner_block) %>
