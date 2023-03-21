@@ -116,6 +116,7 @@ defmodule Swish.Dialog do
   def close(assigns) do
     assigns =
       assign(assigns, :attrs, %{
+        "aria-label" => "Close",
         "phx-click" => hide(assigns.dialog),
         "id" => "#{assigns.dialog.id}-close"
       })
