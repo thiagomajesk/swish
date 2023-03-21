@@ -101,7 +101,7 @@ defmodule Swish.Dialog do
     assigns =
       assign(assigns, :attrs, %{
         "aria-haspopup" => "dialog",
-        "phx-click" => show(assigns.dialog),
+        "phx-click" => JS.exec("data-show", to: "##{assigns.dialog.portal_id}"),
         "id" => "#{assigns.dialog.id}-trigger",
         "data-state" => open_to_state(assigns.dialog)
       })
@@ -158,8 +158,9 @@ defmodule Swish.Dialog do
     <.focus_wrap
       id={@id}
       phx-key={unless @dialog.static, do: "escape"}
-      phx-window-keydown={unless @dialog.static, do: hide(@dialog)}
-      phx-click-away={unless @dialog.static, do: hide(@dialog)}
+      data-hide={unless @dialog.static, do: hide(@dialog)}
+      phx-click-away={JS.exec("data-hide")}
+      phx-window-keydown={JS.exec("data-hide")}
       aria-labelledby={"#{@dialog.id}-title"}
       aria-describedby={"#{@dialog.id}-description"}
       data-state={open_to_state(@dialog)}
@@ -213,12 +214,13 @@ defmodule Swish.Dialog do
   def portal(assigns) do
     ~H"""
     <Swish.Tag.portal
+      data-show={show(@dialog)}
       id={@dialog.portal_id}
       target={@target}
       update={@update}
       close_delay={@dialog.close_delay}
       aria-hidden="true"
-      phx-mounted={@dialog.open && show(@dialog)}
+      phx-mounted={@dialog.open && JS.exec("data-show")}
     >
       <%= render_slot(@inner_block) %>
     </Swish.Tag.portal>

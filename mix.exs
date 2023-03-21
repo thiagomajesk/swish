@@ -55,7 +55,7 @@ defmodule Swish.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix_live_view, "~> 0.18.17"},
+      {:phoenix_live_view, "~> 0.18.18"},
       {:phoenix_html, "~> 3.3.1"},
       {:gettext, "~> 0.20"},
       {:ex_doc, "~> 0.29", only: :dev, runtime: false}
