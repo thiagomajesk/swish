@@ -19,9 +19,9 @@ defmodule Swish.Dialog do
     <Swish.Dialog.backdrop dialog={dialog}>
   	  <Swish.Dialog.content dialog={dialog}>
   		  <Swish.Dialog.title dialog={dialog}>Welcome to Swish!</Swish.Dialog.title>
-  			<Swish.Dialog.description dialog={dialog}>Swish is a UI toolkit for busy developers</Swish.Dialog.description>
+  		  <Swish.Dialog.description dialog={dialog}>Swish is a UI toolkit for busy developers</Swish.Dialog.description>
         <p>Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.</p>
-  		</Swish.Dialog.content>
+  	  </Swish.Dialog.content>
     </Swish.Dialog.backdrop>
   </Swish.Dialog.portal>
   </Swish.Dialog.root>
