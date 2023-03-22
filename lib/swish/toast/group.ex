@@ -29,7 +29,7 @@ defmodule Swish.Toast.Group do
 
     ~H"""
     <Swish.Tag.portal id={@group.portal_id} phx-mounted={JS.dispatch("portal:open")}>
-      <ol tabindex="-1" {@rest}>
+      <ol tabindex="-1" {@rest} role="region">
         <%= render_slot(@inner_block, @group) %>
       </ol>
     </Swish.Tag.portal>

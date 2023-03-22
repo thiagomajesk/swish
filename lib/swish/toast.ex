@@ -79,11 +79,12 @@ defmodule Swish.Toast do
     <.dynamic_tag
       :if={@toast.message}
       id={@toast.id}
-      role="alert"
+      role="status"
       name={(@toast.group && "li") || @as}
       phx-mounted={show(@toast)}
       phx-click={hide(@toast)}
-      aria-live="off"
+      aria-live="polite"
+      aria-atomic="true"
       tabindex="0"
       {@rest}
     >
