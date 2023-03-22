@@ -104,10 +104,10 @@ defmodule Swish.Dialog do
   def trigger(assigns) do
     assigns =
       assign(assigns, :attrs, %{
-        "aria-haspopup" => "dialog",
-        "phx-click" => JS.exec("data-show", to: "##{assigns.dialog.portal_id}"),
-        "id" => "#{assigns.dialog.id}-trigger",
-        "data-state" => open_to_state(assigns.dialog)
+        aria_haspopup: "dialog",
+        phx_click: JS.exec("data-show", to: "##{assigns.dialog.portal_id}"),
+        id: Swish.EL.suffix_id(assigns.dialog, "trigger"),
+        data_state: open_to_state(assigns.dialog)
       })
 
     ~H"""
