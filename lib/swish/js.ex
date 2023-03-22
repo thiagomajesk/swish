@@ -21,26 +21,34 @@ defmodule Swish.JS do
       @behaviour Swish.JS
 
       def show_dialog(js \\ %JS{}, %Swish.Dialog{} = dialog) do
+        trigger_target = Swish.EL.suffix_id(dialog, "trigger", true)
+        backdrop_target = Swish.EL.suffix_id(dialog, "backdrop", true)
+        content_target = Swish.EL.suffix_id(dialog, "content", true)
+
         js
         |> JS.dispatch("portal:open", to: "##{dialog.portal_id}")
-        |> JS.set_attribute({"data-state", "open"}, to: "##{dialog.id}-trigger")
-        |> JS.set_attribute({"data-state", "open"}, to: "##{dialog.id}-backdrop")
-        |> JS.set_attribute({"data-state", "open"}, to: "##{dialog.id}-content")
-        |> JS.set_attribute({"aria-expanded", "true"}, to: "##{dialog.id}-trigger")
+        |> JS.set_attribute({"data-state", "open"}, to: trigger_target)
+        |> JS.set_attribute({"data-state", "open"}, to: backdrop_target)
+        |> JS.set_attribute({"data-state", "open"}, to: content_target)
+        |> JS.set_attribute({"aria-expanded", "true"}, to: trigger_target)
         |> JS.show(
-          to: "##{dialog.id}-backdrop",
+          to: backdrop_target,
           transition: dialog.transitions.show_backdrop,
           time: dialog.open_delay
         )
         |> JS.show(
-          to: "##{dialog.id}-content",
+          to: content_target,
           transition: dialog.transitions.show_content,
           time: dialog.open_delay
         )
-        |> JS.focus_first(to: "##{dialog.id}-content")
+        |> JS.focus_first(to: content_target)
       end
 
       def hide_dialog(js \\ %JS{}, %Swish.Dialog{} = dialog) do
+        trigger_target = Swish.EL.suffix_id(dialog, "trigger", true)
+        backdrop_target = Swish.EL.suffix_id(dialog, "backdrop", true)
+        content_target = Swish.EL.suffix_id(dialog, "content", true)
+
         js
         |> JS.pop_focus()
         |> JS.hide(
@@ -53,10 +61,10 @@ defmodule Swish.JS do
           transition: dialog.transitions.hide_content,
           time: dialog.close_delay
         )
-        |> JS.set_attribute({"data-state", "closed"}, to: "##{dialog.id}-trigger")
-        |> JS.set_attribute({"data-state", "closed"}, to: "##{dialog.id}-backdrop")
-        |> JS.set_attribute({"data-state", "closed"}, to: "##{dialog.id}-content")
-        |> JS.set_attribute({"aria-expanded", "false"}, to: "##{dialog.id}-trigger")
+        |> JS.set_attribute({"data-state", "closed"}, to: trigger_target)
+        |> JS.set_attribute({"data-state", "closed"}, to: backdrop_target)
+        |> JS.set_attribute({"data-state", "closed"}, to: content_target)
+        |> JS.set_attribute({"aria-expanded", "false"}, to: trigger_target)
         |> JS.dispatch("portal:close", to: "##{dialog.portal_id}")
       end
 
