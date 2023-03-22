@@ -83,6 +83,7 @@ defmodule Swish.Toast do
       name={(@toast.group && "li") || @as}
       phx-mounted={show(@toast)}
       phx-click={hide(@toast)}
+      aria-live="off"
       tabindex="0"
       {@rest}
     >
