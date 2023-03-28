@@ -2,7 +2,7 @@ defmodule Swish.Toast.Group do
   @type t :: %Swish.Toast.Group{}
 
   @enforce_keys [:id, :portal_id]
-  defstruct [:id, :portal_id]
+  defstruct [:id, :portal_id, :close_delay]
 
   use Phoenix.Component
 
@@ -23,9 +23,13 @@ defmodule Swish.Toast.Group do
   attr(:dialog, Group)
   attr(:rest, :global)
   slot(:inner_block, required: true)
+  attr(:close_delay, :integer, default: 5_000)
 
   def root(assigns) do
-    assigns = assign_new(assigns, :group, fn -> Group.new() end)
+    assigns = assign_new(assigns, :group, fn -> %{
+      Group.new()
+      | close_delay: assigns.close_delay
+    } end)
 
     ~H"""
     <Swish.Tag.portal id={@group.portal_id} phx-mounted={JS.dispatch("portal:open")}>

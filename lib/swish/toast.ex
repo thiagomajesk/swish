@@ -29,7 +29,7 @@ defmodule Swish.Toast do
   @type t :: %Swish.Toast{}
 
   @enforce_keys [:id, :kind, :message]
-  defstruct [:id, :kind, :flash, :message, :group, :js_show, :js_hide]
+  defstruct [:id, :kind, :flash, :message, :group, :js_show, :js_hide, :close_delay]
 
   use Phoenix.Component
 
@@ -51,7 +51,8 @@ defmodule Swish.Toast do
       group: attrs[:group],
       message: attrs[:message] || Phoenix.Flash.get(flash, kind),
       js_show: Function.capture(js_module, :show_toast, 2),
-      js_hide: Function.capture(js_module, :hide_toast, 2)
+      js_hide: Function.capture(js_module, :hide_toast, 2),
+      close_delay: attrs[:close_delay],
     }
   end
 
@@ -59,6 +60,7 @@ defmodule Swish.Toast do
   attr(:toast, Toast, required: false)
   attr(:group, Group, required: false)
   attr(:flash, :map, default: %{})
+  attr(:close_delay, :integer, required: false)
   attr(:kind, :atom, values: [:info, :error])
   attr(:as, :string, default: "div")
   slot(:inner_block, required: true)
@@ -71,7 +73,8 @@ defmodule Swish.Toast do
           id: assigns.id,
           flash: assigns.flash,
           kind: assigns.kind,
-          group: assigns.group
+          group: assigns.group,
+          close_delay: assigns[:close_delay] || assigns.group.close_delay
         })
       end)
 
@@ -81,6 +84,8 @@ defmodule Swish.Toast do
       id={@toast.id}
       role="status"
       name={(@toast.group && "li") || @as}
+      phx-hook="Swish.Toast"
+      data-close-delay={@toast.close_delay}
       phx-mounted={show(@toast)}
       phx-click={hide(@toast)}
       aria-atomic="true"
