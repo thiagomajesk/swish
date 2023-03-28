@@ -1,8 +1,3 @@
-defmodule Swish.Dialog.Transitions do
-  @moduledoc false
-  defstruct [:show_content, :hide_content, :show_backdrop, :hide_backdrop]
-end
-
 defmodule Swish.Dialog do
   @moduledoc """
   A dialog is a window overlaid on either the primary window or another dialog window.
@@ -24,9 +19,9 @@ defmodule Swish.Dialog do
     <Swish.Dialog.backdrop dialog={dialog}>
   	  <Swish.Dialog.content dialog={dialog}>
   		  <Swish.Dialog.title dialog={dialog}>Welcome to Swish!</Swish.Dialog.title>
-  			<Swish.Dialog.description dialog={dialog}>Swish is a UI toolkit for busy developers</Swish.Dialog.description>
+  		  <Swish.Dialog.description dialog={dialog}>Swish is a UI toolkit for busy developers</Swish.Dialog.description>
         <p>Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.</p>
-  		</Swish.Dialog.content>
+  	  </Swish.Dialog.content>
     </Swish.Dialog.backdrop>
   </Swish.Dialog.portal>
   </Swish.Dialog.root>
@@ -55,25 +50,23 @@ defmodule Swish.Dialog do
   alias Phoenix.LiveView.JS
 
   @doc false
-  def new() do
+  def new(attrs \\ %{}) do
     js_module = Swish.JS.dynamic!()
-    dialog_id = System.unique_integer([:positive, :monotonic])
-    portal_id = System.unique_integer()
 
     %Dialog{
-      id: "dialog-#{dialog_id}",
-      portal_id: "portal-#{portal_id}",
+      id: attrs[:id] || Swish.EL.new_id("dialog"),
+      open: attrs[:open] || false,
+      static: attrs[:static] || false,
+      open_delay: attrs[:open_delay] || 200,
+      close_delay: attrs[:close_delay] || 200,
+      portal_id: Swish.EL.new_id("portal"),
       js_show: Function.capture(js_module, :show_dialog, 2),
       js_hide: Function.capture(js_module, :hide_dialog, 2),
-      open: false,
-      static: false,
-      open_delay: 200,
-      close_delay: 200,
-      transitions: %Dialog.Transitions{}
+      transitions: attrs[:transitions] || %Dialog.Transitions{}
     }
   end
 
-  attr(:id, :string, required: false)
+  attr(:id, :string, default: nil)
   attr(:open, :boolean, default: false)
   attr(:static, :boolean, default: false)
   attr(:open_delay, :integer, default: 200)
@@ -88,14 +81,14 @@ defmodule Swish.Dialog do
   def root(assigns) do
     assigns =
       assign_new(assigns, :dialog, fn ->
-        %{
-          Dialog.new()
-          | open: assigns.open,
-            static: assigns.static,
-            open_delay: assigns.open_delay,
-            close_delay: assigns.close_delay,
-            transitions: assigns.transitions
-        }
+        Dialog.new(%{
+          id: assigns.id,
+          open: assigns.open,
+          static: assigns.static,
+          open_delay: assigns.open_delay,
+          close_delay: assigns.close_delay,
+          transitions: assigns.transitions
+        })
       end)
 
     ~H"""
@@ -111,10 +104,10 @@ defmodule Swish.Dialog do
   def trigger(assigns) do
     assigns =
       assign(assigns, :attrs, %{
-        "aria-haspopup" => "dialog",
-        "phx-click" => JS.exec("data-show", to: "##{assigns.dialog.portal_id}"),
-        "id" => "#{assigns.dialog.id}-trigger",
-        "data-state" => open_to_state(assigns.dialog)
+        aria_haspopup: "dialog",
+        phx_click: JS.exec("data-show", to: "##{assigns.dialog.portal_id}"),
+        id: Swish.EL.suffix_id(assigns.dialog, "trigger"),
+        data_state: open_to_state(assigns.dialog)
       })
 
     ~H"""
@@ -127,7 +120,7 @@ defmodule Swish.Dialog do
   attr(:rest, :global)
 
   def backdrop(assigns) do
-    assigns = assign(assigns, id: "#{assigns.dialog.id}-backdrop")
+    assigns = assign(assigns, id: Swish.EL.suffix_id(assigns.dialog, "backdrop"))
 
     ~H"""
     <div
@@ -148,9 +141,9 @@ defmodule Swish.Dialog do
   def close(assigns) do
     assigns =
       assign(assigns, :attrs, %{
-        "aria-label" => "Close",
-        "phx-click" => hide(assigns.dialog),
-        "id" => "#{assigns.dialog.id}-close"
+        aria_label: "Close",
+        phx_click: hide(assigns.dialog),
+        id: Swish.EL.suffix_id(assigns.dialog, "close")
       })
 
     ~H"""
@@ -163,7 +156,7 @@ defmodule Swish.Dialog do
   slot(:inner_block, required: true)
 
   def content(assigns) do
-    assigns = assign(assigns, id: "#{assigns.dialog.id}-content")
+    assigns = assign(assigns, id: Swish.EL.suffix_id(assigns.dialog, "content"))
 
     ~H"""
     <.focus_wrap
@@ -172,8 +165,8 @@ defmodule Swish.Dialog do
       data-hide={unless @dialog.static, do: hide(@dialog)}
       phx-click-away={JS.exec("data-hide")}
       phx-window-keydown={JS.exec("data-hide")}
-      aria-labelledby={"#{@dialog.id}-title"}
-      aria-describedby={"#{@dialog.id}-description"}
+      aria-labelledby={Swish.EL.suffix_id(@dialog, "title")}
+      aria-describedby={Swish.EL.suffix_id(@dialog, "description")}
       data-state={open_to_state(@dialog)}
       role="dialog"
       aria-modal="true"
@@ -192,7 +185,7 @@ defmodule Swish.Dialog do
   slot(:inner_block, required: true)
 
   def title(assigns) do
-    assigns = assign(assigns, id: "#{assigns.dialog.id}-title")
+    assigns = assign(assigns, id: Swish.EL.suffix_id(assigns.dialog, "title"))
 
     ~H"""
     <.dynamic_tag id={@id} name={@as} {@rest}>
@@ -207,7 +200,7 @@ defmodule Swish.Dialog do
   slot(:inner_block, required: true)
 
   def description(assigns) do
-    assigns = assign(assigns, id: "#{assigns.dialog.id}-description")
+    assigns = assign(assigns, id: Swish.EL.suffix_id(assigns.dialog, "description"))
 
     ~H"""
     <.dynamic_tag id={@id} name={@as} {@rest}>
