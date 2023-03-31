@@ -71,7 +71,7 @@ defmodule Swish.JS do
       def show_toast(js \\ %JS{}, %Swish.Toast{} = toast) do
         js
         |> JS.set_attribute({"data-state", "open"}, to: "##{toast.id}")
-        |> JS.hide(to: "##{toast.id}")
+        |> JS.show(to: "##{toast.id}")
       end
 
       def hide_toast(js \\ %JS{}, %Swish.Toast{} = toast) do

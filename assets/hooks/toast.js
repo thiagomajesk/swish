@@ -13,7 +13,6 @@ export default {
   closeTimeout: null,
 
   mounted() {
-    console.log("swish mounted")
     this.closeDelay = getAttributeOrThrow(this.el, "data-close-delay", parseInteger);
 
     setTimeout(() => {

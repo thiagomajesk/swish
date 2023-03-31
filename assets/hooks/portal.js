@@ -70,6 +70,17 @@ export default {
     // Opens the portal and teleports clone to target.
     // Await a little before opening so animation ca be properly displayed.
     updates[this.update](this.target, this.clone);
+    
+    // forcefully run hooks
+    this.clone.querySelectorAll("[phx-hook]").forEach(el => {
+      window.liveSocket.main.maybeAddNewHook(el)
+      console.log("activating element hook")
+    })
+
+    this.clone.querySelectorAll("[phx-mounted]").forEach(el => {
+      window.liveSocket.main.maybeMounted(el)
+      console.log("mounting element")
+    })
 
     // Await until next tick to register the forwarded events
     forwardEvents(this.el, this.clone)
