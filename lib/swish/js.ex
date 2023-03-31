@@ -68,6 +68,19 @@ defmodule Swish.JS do
         |> JS.dispatch("portal:close", to: "##{dialog.portal_id}")
       end
 
+      def show_toast(js \\ %JS{}, %Swish.Toast{} = toast) do
+        js
+        |> JS.set_attribute({"data-state", "open"}, to: "##{toast.id}")
+        |> JS.show(to: "##{toast.id}")
+      end
+
+      def hide_toast(js \\ %JS{}, %Swish.Toast{} = toast) do
+        js
+        |> JS.push("lv:clear-flash", value: %{key: toast.kind})
+        |> JS.set_attribute({"data-state", "closed"}, to: "##{toast.id}")
+        |> JS.hide(to: "##{toast.id}")
+      end
+
       defoverridable Swish.JS
     end
   end
