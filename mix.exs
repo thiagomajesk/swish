@@ -10,6 +10,7 @@ defmodule Swish.MixProject do
       version: @version,
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
+      aliases: aliases(),
       description: description(),
       package: package(),
       docs: docs(),
@@ -58,7 +59,15 @@ defmodule Swish.MixProject do
       {:phoenix_live_view, "~> 0.18.18"},
       {:phoenix_html, "~> 3.3.1"},
       {:gettext, "~> 0.20"},
-      {:ex_doc, "~> 0.29", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.29", only: :dev, runtime: false},
+      {:esbuild, "~> 0.2", only: :dev, runtime: false}
+    ]
+  end
+
+  defp aliases do
+    [
+      "assets.build": ["esbuild module", "esbuild cdn", "esbuild cdn_min", "esbuild main"],
+      "assets.watch": ["esbuild module --watch"]
     ]
   end
 end
