@@ -3,10 +3,13 @@
   "version": "0.0.0",
   "description": "Swish",
   "license": "MIT",
-  "main": "./assets/hooks/index.js",
+  "module": "./priv/static/swish.esm.js",
+  "main": "./priv/static/swish.cjs.js",
+  "unpkg": "./priv/static/swish.min.js",
+  "jsdelivr": "./priv/static/swish.min.js",
   "exports": {
-    "import": "./assets/hooks/index.js",
-    "require": "./assets/hooks/index.js"
+    "import": "./priv/static/swish.esm.js",
+    "require": "./priv/static/swish.cjs.js"
   },
   "files": [
     "README.md",
